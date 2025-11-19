@@ -149,19 +149,7 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const handleDownloadChat = () => {
-    const chatText = messages.map(msg => 
-      `[${msg.timestamp}] ${msg.role.toUpperCase()}: ${msg.content}`
-    ).join('\n\n');
-    
-    const blob = new Blob([chatText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+
 
   return (
     <div className="app-container">
