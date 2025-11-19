@@ -135,7 +135,6 @@ class RAGSystem:
         try:
             # Get filename - handle both Streamlit and FastAPI file objects
             filename = getattr(uploaded_file, 'filename', None) or getattr(uploaded_file, 'name', 'unknown')
-            print(f"\n[UPLOAD] Starting upload for file: {filename}")
             
             existing_docs = self.get_uploaded_documents()
             existing_names = [doc['name'] for doc in existing_docs]
@@ -156,9 +155,6 @@ class RAGSystem:
                 file_type = uploaded_file.content_type or 'application/octet-stream'
             else:
                 return "Unsupported file format"
-
-            print(f"[UPLOAD] File size: {file_size} bytes ({file_size / 1024:.2f} KB)")
-            print(f"[UPLOAD] File type: {file_type}")
             
             with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{filename}") as temp_file:
                 temp_file.write(file_content)
@@ -175,10 +171,7 @@ class RAGSystem:
                 file_extractor=file_extractor if file_extractor else None
             ).load_data()
 
-            total_chars = sum(len(doc.text) for doc in documents)
             print(f"[INDEXING] Extracted {len(documents)} document chunks")
-            print(f"[INDEXING] Total characters: {total_chars}")
-            print(f"[INDEXING] Estimated tokens: ~{total_chars // 4}")
 
             for doc in documents:
                 doc_id = f"{filename}_{hash(doc.text)}"
