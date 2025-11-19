@@ -45,26 +45,48 @@ const ChatPage: React.FC = () => {
     };
     setMessages([...messages, userMessage]);
 
-    try {
-      const response = await apiService.queryRAG({
-        query,
-        api_provider: selectedProvider,
-        api_key_groq: apiKeys.groq,
-        api_key_openai: apiKeys.openai,
-        api_key_gemini: apiKeys.gemini,
-        api_key_deepseek: apiKeys.deepseek,
-      });
+    // Create placeholder for assistant message
+    const assistantMessage: Message = {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    
+    const newMessages = [...messages, userMessage, assistantMessage];
+    setMessages(newMessages);
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response.response,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages([...messages, userMessage, assistantMessage]);
+    try {
+      console.log('[FRONTEND] Sending query:', query);
+      console.log('[FRONTEND] Using provider:', selectedProvider);
+      
+      await apiService.queryRAGStream(
+        {
+          query,
+          api_provider: selectedProvider,
+          api_key_groq: apiKeys.groq,
+          api_key_openai: apiKeys.openai,
+          api_key_gemini: apiKeys.gemini,
+          api_key_deepseek: apiKeys.deepseek,
+        },
+        (chunk: string) => {
+          // Update the last message (assistant) with accumulated content
+          setMessages(prevMessages => {
+            const updated = [...prevMessages];
+            const lastMsg = updated[updated.length - 1];
+            if (lastMsg.role === 'assistant') {
+              lastMsg.content += chunk;
+            }
+            return updated;
+          });
+        }
+      );
+      
+      console.log('[FRONTEND] Stream completed');
     } catch (error: any) {
+      console.error('[FRONTEND ERROR]', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: `Error: ${error.response?.data?.detail || 'Failed to get response'}`,
+        content: `Error: ${error.response?.data?.detail || error.message || 'Failed to get response'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages([...messages, userMessage, errorMessage]);

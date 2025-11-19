@@ -87,7 +87,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 key={index}
                 className={`message-wrapper ${message.role}`}
               >
-                <div className="message-card ${message.role}">
+                <div className={`message-icon ${message.role}`}>
+                  {message.role === 'user' ? '👤' : '🤖'}
+                </div>
+                <div className={`message-card ${message.role}`}>
                   <div className="message-content">{message.content}</div>
                   <div className="message-footer">
                     <span className="message-time">{message.timestamp}</span>

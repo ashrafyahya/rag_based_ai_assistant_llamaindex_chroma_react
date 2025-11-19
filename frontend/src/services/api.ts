@@ -65,6 +65,46 @@ class APIService {
     return response.data;
   }
 
+  async queryRAGStream(
+    params: {
+      query: string;
+      n_results?: number;
+      api_provider: string;
+      api_key_groq?: string;
+      api_key_openai?: string;
+      api_key_gemini?: string;
+      api_key_deepseek?: string;
+    },
+    onChunk: (chunk: string) => void
+  ) {
+    const response = await fetch(`${API_BASE_URL}/api/chat/query/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('Stream not available');
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value, { stream: true });
+      onChunk(chunk);
+    }
+  }
+
   async clearChatMemory() {
     const response = await this.client.post('/api/chat/clear');
     return response.data;
