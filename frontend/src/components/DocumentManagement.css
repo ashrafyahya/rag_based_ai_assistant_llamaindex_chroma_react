@@ -93,7 +93,7 @@
 .upload-btn:hover:not(:disabled) {
   background: var(--ion-color-primary-shade);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
 }
 
 .browse-button:disabled,
