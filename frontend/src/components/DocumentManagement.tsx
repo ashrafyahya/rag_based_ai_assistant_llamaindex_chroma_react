@@ -6,6 +6,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import apiService from '../services/api';
 import { Document } from '../types';
 import './DocumentManagement.css';
+import Toast, { ToastType } from './Toast';
+
+interface ToastState {
+  message: string;
+  type: ToastType;
+}
 
 interface DocumentManagementProps {
   onClose: () => void;
@@ -17,7 +23,12 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const showToast = (message: string, type: ToastType) => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     loadDocuments();
@@ -63,10 +74,15 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
       }
       await loadDocuments();
       console.log('Documents reloaded successfully');
+      
+      showToast(
+        `Successfully uploaded ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}`,
+        'success'
+      );
     } catch (error: any) {
       console.error('Error uploading documents:', error);
       const errorMsg = error.response?.data?.detail || error.message || 'Unknown error occurred';
-      alert(`Error uploading documents: ${errorMsg}\n\nPlease check the console for more details.`);
+      showToast(`Error uploading documents: ${errorMsg}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -109,7 +125,12 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
   };
 
   const removeSelectedFile = (index: number) => {
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    // Reset file input to allow re-selection of files
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleDeleteDocument = async (docId: string) => {
@@ -120,9 +141,10 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
     try {
       await apiService.deleteDocument(docId);
       await loadDocuments();
+      showToast('Document deleted successfully', 'success');
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert('Error deleting document. Please try again.');
+      showToast('Error deleting document. Please try again.', 'error');
     }
   };
 
@@ -134,9 +156,10 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
     try {
       await apiService.clearAllDocuments();
       await loadDocuments();
+      showToast('All documents cleared successfully', 'success');
     } catch (error) {
       console.error('Error clearing documents:', error);
-      alert('Error clearing documents. Please try again.');
+      showToast('Error clearing documents. Please try again.', 'error');
     }
   };
 
@@ -261,7 +284,11 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
                 </div>
                 <button
                   className="delete-button"
-                  onClick={() => handleDeleteDocument(doc.ids[0])}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteDocument(doc.ids[0]);
+                  }}
                   title="Delete document"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -273,6 +300,14 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
           </ul>
         )}
       </div>
+      
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 };

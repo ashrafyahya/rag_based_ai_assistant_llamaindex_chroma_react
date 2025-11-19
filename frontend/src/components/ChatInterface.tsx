@@ -19,8 +19,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -33,6 +34,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       try {
         await onSendMessage(input);
         setInput('');
+        // Reset textarea height
+        if (inputRef.current) {
+          inputRef.current.style.height = 'auto';
+        }
       } finally {
         setIsLoading(false);
         // Auto-focus input after sending
@@ -48,8 +53,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const adjustTextareaHeight = () => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 72) + 'px';
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    adjustTextareaHeight();
+  };
+
+  const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
@@ -73,13 +93,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <span className="message-time">{message.timestamp}</span>
                     <button
                       className="copy-button"
-                      onClick={() => copyToClipboard(message.content)}
+                      onClick={() => copyToClipboard(message.content, index)}
                       title="Copy to clipboard"
                     >
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M3.333 10h-.666a1.333 1.333 0 0 1-1.334-1.333v-6a1.333 1.333 0 0 1 1.334-1.334h6A1.333 1.333 0 0 1 10 2.667v.666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                      {copiedIndex === index ? (
+                        <span className="copied-text">Copied!</span>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M3.333 10h-.666a1.333 1.333 0 0 1-1.334-1.333v-6a1.333 1.333 0 0 1 1.334-1.334h6A1.333 1.333 0 0 1 10 2.667v.666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -127,15 +151,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         )}
         <div className="input-wrapper">
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={input}
             placeholder="Type your message here..."
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             disabled={isLoading}
             className="chat-input"
+            rows={1}
           />
           <button
             onClick={handleSend}
