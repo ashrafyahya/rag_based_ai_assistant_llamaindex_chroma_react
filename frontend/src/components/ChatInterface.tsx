@@ -74,6 +74,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="chat-interface">
+      {messages.length > 0 && (
+        <div className="chat-actions-buttons-fixed">
+          <button
+            className="message-action-btn"
+            onClick={() => {
+              const chatText = messages.map(msg =>
+                `[${msg.timestamp}] ${msg.role.toUpperCase()}: ${msg.content}`
+              ).join('\n\n');
+              const blob = new Blob([chatText], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `chat-${new Date().toISOString().split('T')[0]}.txt`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            title="Download chat"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 10v2.667A1.334 1.334 0 0 1 12.667 14H3.333A1.333 1.333 0 0 1 2 12.667V10M4.667 6.667L8 10m0 0l3.333-3.333M8 10V2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <button
+            className="message-action-btn delete-action"
+            onClick={onClearChat}
+            title="Clear chat"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
@@ -142,39 +175,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </svg>
             )}
           </button>
-          <div className="chat-actions-buttons">
-            <button
-              className="message-action-btn"
-              onClick={() => {
-                const chatText = messages.map(msg => 
-                  `[${msg.timestamp}] ${msg.role.toUpperCase()}: ${msg.content}`
-                ).join('\n\n');
-                const blob = new Blob([chatText], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `chat-${new Date().toISOString().split('T')[0]}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              title="Download chat"
-              disabled={messages.length === 0}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 10v2.667A1.334 1.334 0 0 1 12.667 14H3.333A1.333 1.333 0 0 1 2 12.667V10M4.667 6.667L8 10m0 0l3.333-3.333M8 10V2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <button
-              className="message-action-btn delete-action"
-              onClick={onClearChat}
-              title="Clear chat"
-              disabled={messages.length === 0}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
+
         </div>
       </div>
     </div>
