@@ -47,7 +47,6 @@ def query_documents(
     if distances:
         best_distance = min(distances)
         print(f"[DISTANCE SCORE] Best: {best_distance:.4f} (lower = more similar)")
-        print(f"[DISTANCE SCORE] All scores: {[f'{d:.4f}' for d in distances]}")
     
     # Format context from search results
     context = rag_system.format_search_results(results, query)

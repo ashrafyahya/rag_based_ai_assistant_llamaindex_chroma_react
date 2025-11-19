@@ -170,7 +170,6 @@ async def query_endpoint(request: QueryRequest):
         QueryResponse with generated answer
     """
     try:
-        print(f"[BACKEND] Received query: {request.query}")
         print(f"[BACKEND] API Provider: {request.api_provider}")
         response = query_documents(
             query=request.query,
@@ -181,7 +180,6 @@ async def query_endpoint(request: QueryRequest):
             api_key_gemini=request.api_key_gemini,
             api_key_deepseek=request.api_key_deepseek,
         )
-        print(f"[BACKEND] Response generated: {response[:100]}...")
         return QueryResponse(response=response, success=True)
     except Exception as e:
         print(f"[BACKEND ERROR] {str(e)}")

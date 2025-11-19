@@ -89,13 +89,10 @@ def query_with_groq(query: str, context: str, api_key: str, max_retries: int = 2
     if error:
         return error
 
-    print(f"[MEMORY] Current messages in memory: {len(memory_manager.chat_history)}")
-    print(f"[LLM] Sending {len(messages)} messages to Groq")
     
     # Calculate token estimate
     total_chars = sum(len(msg.content) for msg in messages)
     estimated_tokens = total_chars // 4
-    print(f"[TOKENS] Estimated input tokens: ~{estimated_tokens} (based on {total_chars} characters)")
 
     # Retry logic for handling transient errors
     for attempt in range(max_retries + 1):
@@ -103,7 +100,6 @@ def query_with_groq(query: str, context: str, api_key: str, max_retries: int = 2
             response = llm.chat(messages)
             answer = response.message.content
             output_tokens = len(answer) // 4
-            print(f"[TOKENS] Estimated output tokens: ~{output_tokens} (based on {len(answer)} characters)")
             memory_manager.add_exchange(query, answer)
             return answer
         except InternalServerError as e:
