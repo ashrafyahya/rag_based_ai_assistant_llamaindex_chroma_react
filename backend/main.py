@@ -198,10 +198,11 @@ async def query_endpoint_stream(request: QueryRequest):
         StreamingResponse with generated answer chunks
     """
     try:
-        print(f"[BACKEND STREAM] Received query: {request.query}")
         print(f"[BACKEND STREAM] API Provider: {request.api_provider}")
         
+        chunk_count = 0
         async def generate():
+            nonlocal chunk_count
             async for chunk in query_documents_stream(
                 query=request.query,
                 n_results=request.n_results,
@@ -211,6 +212,8 @@ async def query_endpoint_stream(request: QueryRequest):
                 api_key_gemini=request.api_key_gemini,
                 api_key_deepseek=request.api_key_deepseek,
             ):
+                chunk_count += 1
+                # print(f"[BACKEND STREAM] Yielding chunk #{chunk_count}: {repr(chunk[:50])}")
                 yield chunk
         
         return StreamingResponse(generate(), media_type="text/plain")

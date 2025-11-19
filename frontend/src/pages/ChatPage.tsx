@@ -89,9 +89,13 @@ const ChatPage: React.FC = () => {
           // Update the last message (assistant) with accumulated content
           setMessages(prevMessages => {
             const updated = [...prevMessages];
-            const lastMsg = updated[updated.length - 1];
-            if (lastMsg.role === 'assistant') {
-              lastMsg.content += chunk;
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0 && updated[lastIndex].role === 'assistant') {
+              // Create a new message object instead of mutating
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: updated[lastIndex].content + chunk
+              };
             }
             return updated;
           });
