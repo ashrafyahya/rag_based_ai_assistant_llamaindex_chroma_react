@@ -8,6 +8,7 @@ import ChatInterface from '../components/ChatInterface';
 import DocumentManagement from '../components/DocumentManagement';
 import apiService from '../services/api';
 import { APIKeys, Message, Provider } from '../types';
+import { getEncryptedItem, setEncryptedItem } from '../utils/encryption';
 import './ChatPage.css';
 
 const ChatPage: React.FC = () => {
@@ -28,6 +29,22 @@ const ChatPage: React.FC = () => {
 
   const loadSavedSettings = async () => {
     try {
+      // Load encrypted API keys from localStorage
+      const encryptedKeys: APIKeys = {
+        groq: getEncryptedItem('api_key_groq'),
+        openai: getEncryptedItem('api_key_openai'),
+        gemini: getEncryptedItem('api_key_gemini'),
+        deepseek: getEncryptedItem('api_key_deepseek'),
+      };
+      setApiKeys(encryptedKeys);
+      
+      // Load selected provider from localStorage
+      const savedProvider = localStorage.getItem('selected_provider') as Provider;
+      if (savedProvider) {
+        setSelectedProvider(savedProvider);
+      }
+      
+      // Also sync with backend
       const providerResponse = await apiService.getSelectedProvider();
       if (providerResponse.provider) {
         setSelectedProvider(providerResponse.provider);
@@ -107,6 +124,16 @@ const ChatPage: React.FC = () => {
     setSelectedProvider(provider);
     
     try {
+      // Save encrypted API keys to localStorage
+      if (keys.groq) setEncryptedItem('api_key_groq', keys.groq);
+      if (keys.openai) setEncryptedItem('api_key_openai', keys.openai);
+      if (keys.gemini) setEncryptedItem('api_key_gemini', keys.gemini);
+      if (keys.deepseek) setEncryptedItem('api_key_deepseek', keys.deepseek);
+      
+      // Save selected provider to localStorage
+      localStorage.setItem('selected_provider', provider);
+      
+      // Also sync with backend
       for (const [providerName, key] of Object.entries(keys)) {
         if (key) {
           await apiService.saveAPIKey(providerName, key);

@@ -91,7 +91,9 @@
 }
 
 .message-card {
-  width: 60%;
+  width: 450px;
+  min-width: 450px;
+  max-width: 450px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   border: 1px solid var(--app-border-color);
@@ -99,6 +101,9 @@
 }
 
 .message-card.user {
+  width: 450px;
+  min-width: 450px;
+  max-width: 450px;
   background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
   color: white;
   border: none;
@@ -156,52 +161,59 @@
 .input-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 15%;
+  padding: 24px 15%;
   border-top: 1px solid var(--app-border-color);
   background: var(--app-bg-darker);
-}
-
-.chat-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--app-card-bg);
-  border: 1px solid var(--app-border-color);
-  border-radius: 8px;
-  color: var(--app-text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: var(--app-input-bg);
-  border-color: var(--ion-color-primary);
-  color: var(--app-text-primary);
-  transform: translateY(-1px);
-}
-
-.action-btn.delete-btn:hover {
-  border-color: var(--app-accent-red);
-  color: var(--app-accent-red);
-}
-
-.action-btn svg {
-  flex-shrink: 0;
 }
 
 .input-wrapper {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.chat-actions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.message-action-btn {
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-border-color);
+  border-radius: 8px;
+  color: var(--app-text-secondary);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.message-action-btn:hover:not(:disabled) {
+  background: var(--app-input-bg);
+  border-color: var(--ion-color-primary);
+  color: var(--app-text-primary);
+  transform: translateY(-1px);
+}
+
+.message-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.message-action-btn.delete-action:hover:not(:disabled) {
+  border-color: var(--app-accent-red);
+  color: var(--app-accent-red);
+}
+
+.message-action-btn svg {
+  flex-shrink: 0;
 }
 
 .chat-input {
@@ -220,6 +232,12 @@
   overflow-y: auto;
   font-family: inherit;
   line-height: 1.5;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.chat-input::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .chat-input:focus {
@@ -294,8 +312,11 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .message-card {
-    width: 75%;
+  .message-card,
+  .message-card.user {
+    width: 350px;
+    min-width: 350px;
+    max-width: 350px;
   }
 
   .messages-container {
@@ -306,19 +327,18 @@
     padding: 16px 8%;
   }
 
-  .chat-actions {
-    flex-wrap: wrap;
-  }
-
-  .action-btn {
-    font-size: 0.85rem;
-    padding: 6px 12px;
+  .message-action-btn {
+    width: 36px;
+    height: 36px;
   }
 }
 
 @media (max-width: 480px) {
-  .message-card {
-    width: 85%;
+  .message-card,
+  .message-card.user {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
   }
 
   .message-icon {
@@ -333,5 +353,15 @@
 
   .welcome-message p {
     font-size: 0.95rem;
+  }
+
+  .message-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .message-action-btn svg {
+    width: 14px;
+    height: 14px;
   }
 }
