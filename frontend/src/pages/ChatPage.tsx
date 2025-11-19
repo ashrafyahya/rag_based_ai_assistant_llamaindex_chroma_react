@@ -2,17 +2,6 @@
  * Main Chat Page Component
  * Container for the entire RAG application with sidebar layout
  */
-import {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonHeader,
-    IonIcon,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-} from '@ionic/react';
-import { downloadOutline, settingsOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import APISettings from '../components/APISettings';
 import ChatInterface from '../components/ChatInterface';
@@ -24,7 +13,7 @@ import './ChatPage.css';
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showAPISettings, setShowAPISettings] = useState(false);
-  const [showDocuments, setShowDocuments] = useState(true); // Show by default
+  const [showDocuments, setShowDocuments] = useState(true);
   const [apiKeys, setApiKeys] = useState<APIKeys>({
     groq: '',
     openai: '',
@@ -33,7 +22,6 @@ const ChatPage: React.FC = () => {
   });
   const [selectedProvider, setSelectedProvider] = useState<Provider>('groq');
 
-  // Load saved API keys and provider on mount
   useEffect(() => {
     loadSavedSettings();
   }, []);
@@ -96,7 +84,6 @@ const ChatPage: React.FC = () => {
     setApiKeys(keys);
     setSelectedProvider(provider);
     
-    // Save to backend
     try {
       for (const [providerName, key] of Object.entries(keys)) {
         if (key) {
@@ -124,73 +111,78 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>
-            <div className="header-title">
-              <span className="logo-icon">🤖</span>
-              <span className="logo-text">RAG-based AI Assistant</span>
-            </div>
-          </IonTitle>
-          <IonButtons slot="end">
-            <IonButton onClick={handleDownloadChat} disabled={messages.length === 0}>
-              <IonIcon icon={downloadOutline} slot="icon-only" />
-            </IonButton>
-            <IonButton onClick={() => setShowAPISettings(!showAPISettings)}>
-              <IonIcon icon={settingsOutline} slot="icon-only" />
-            </IonButton>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-
-      <IonContent>
-        <div className="app-layout">
-          {/* Sidebar for Documents */}
-          <aside className={`sidebar ${showDocuments ? 'visible' : 'hidden'}`}>
-            <div className="sidebar-header">
-              <h2>Document Management</h2>
-              <button 
-                className="toggle-sidebar-btn"
-                onClick={() => setShowDocuments(!showDocuments)}
-                title="Toggle sidebar"
-              >
-                {showDocuments ? '◀' : '▶'}
-              </button>
-            </div>
-            <DocumentManagement onClose={() => setShowDocuments(false)} />
-          </aside>
-
-          {/* Main Chat Area */}
-          <main className="main-content">
-            {!showDocuments && (
-              <button 
-                className="open-sidebar-btn"
-                onClick={() => setShowDocuments(true)}
-                title="Open Document Management"
-              >
-                📁
-              </button>
-            )}
-            
-            {showAPISettings ? (
-              <APISettings
-                apiKeys={apiKeys}
-                selectedProvider={selectedProvider}
-                onSave={handleSaveAPIKeys}
-                onClose={() => setShowAPISettings(false)}
-              />
-            ) : (
-              <ChatInterface
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                onClearChat={handleClearChat}
-              />
-            )}
-          </main>
+    <div className="app-container">
+      <header className="app-header">
+        <div className="header-title">
+          <span className="logo-text">RAG-based AI Assistant</span>
         </div>
-      </IonContent>
-    </IonPage>
+        <div className="header-actions">
+          <button
+            className="header-btn"
+            onClick={() => setShowAPISettings(!showAPISettings)}
+            title="Settings"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M16.167 12.5a1.375 1.375 0 0 0 .275 1.517l.05.05a1.668 1.668 0 1 1-2.359 2.358l-.05-.05a1.375 1.375 0 0 0-1.516-.275 1.375 1.375 0 0 0-.834 1.258v.142a1.667 1.667 0 0 1-3.333 0v-.075a1.375 1.375 0 0 0-.9-1.258 1.375 1.375 0 0 0-1.517.275l-.05.05a1.668 1.668 0 1 1-2.358-2.358l.05-.05a1.375 1.375 0 0 0 .275-1.517 1.375 1.375 0 0 0-1.258-.834H2.5a1.667 1.667 0 0 1 0-3.333h.075a1.375 1.375 0 0 0 1.258-.9 1.375 1.375 0 0 0-.275-1.517l-.05-.05a1.668 1.668 0 1 1 2.359-2.358l.05.05a1.375 1.375 0 0 0 1.516.275h.067a1.375 1.375 0 0 0 .833-1.258V2.5a1.667 1.667 0 0 1 3.334 0v.075a1.375 1.375 0 0 0 .833 1.258 1.375 1.375 0 0 0 1.517-.275l.05-.05a1.668 1.668 0 1 1 2.358 2.359l-.05.05a1.375 1.375 0 0 0-.275 1.516v.067a1.375 1.375 0 0 0 1.259.833h.141a1.667 1.667 0 0 1 0 3.334h-.075a1.375 1.375 0 0 0-1.258.833v0Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div className="app-layout">
+        <aside className={`sidebar ${showDocuments ? 'visible' : 'hidden'}`}>
+          <div className="sidebar-header">
+            <h2>Document Management</h2>
+            <button 
+              className="toggle-sidebar-btn"
+              onClick={() => setShowDocuments(!showDocuments)}
+              title="Toggle sidebar"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <DocumentManagement onClose={() => setShowDocuments(false)} />
+        </aside>
+
+        <main className="main-content">
+          {!showDocuments && (
+            <button 
+              className="open-sidebar-btn"
+              onClick={() => setShowDocuments(true)}
+              title="Open Document Management"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 10h14M3 5h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+          
+          {showAPISettings && (
+            <div className="modal-overlay" onClick={() => setShowAPISettings(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <APISettings
+                  apiKeys={apiKeys}
+                  selectedProvider={selectedProvider}
+                  onSave={handleSaveAPIKeys}
+                  onClose={() => setShowAPISettings(false)}
+                />
+              </div>
+            </div>
+          )}
+          
+          {!showAPISettings && (
+            <ChatInterface
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              onClearChat={handleClearChat}
+            />
+          )}
+        </main>
+      </div>
+    </div>
   );
 };
 

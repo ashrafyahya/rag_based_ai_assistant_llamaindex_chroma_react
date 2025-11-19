@@ -2,15 +2,6 @@
  * Chat Interface Component
  * Displays messages and input for chatting with the RAG system
  */
-import {
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonIcon,
-    IonInput,
-    IonSpinner,
-} from '@ionic/react';
-import { sendOutline, trashOutline } from 'ionicons/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Message } from '../types';
 import './ChatInterface.css';
@@ -63,7 +54,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
-            <h3>Welcome to RAG AI Assistant! 👋</h3>
+            <h3>Welcome to RAG AI Assistant!</h3>
             <p>Upload documents using the sidebar and start asking questions about them.</p>
           </div>
         ) : (
@@ -73,25 +64,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 key={index}
                 className={`message-wrapper ${message.role}`}
               >
-                <div className="message-icon">
-                  {message.role === 'user' ? '👤' : '🤖'}
-                </div>
-                <IonCard className={`message-card ${message.role}`}>
-                  <IonCardContent>
-                    <div className="message-content">{message.content}</div>
-                    <div className="message-footer">
-                      <span className="message-time">{message.timestamp}</span>
-                      <IonButton
-                        size="small"
-                        fill="clear"
+                <div className="message-card ${message.role}">
+                  <div className="message-content">{message.content}</div>
+                  <div className="message-footer">
+                    <span className="message-time">{message.timestamp}</span>
+                    {message.role === 'assistant' && (
+                      <button
+                        className="copy-button"
                         onClick={() => copyToClipboard(message.content)}
                         title="Copy to clipboard"
                       >
-                        📋
-                      </IonButton>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M3.333 10h-.666a1.333 1.333 0 0 1-1.334-1.333v-6a1.333 1.333 0 0 1 1.334-1.334h6A1.333 1.333 0 0 1 10 2.667v.666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -101,31 +91,64 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       <div className="input-container">
         {messages.length > 0 && (
-          <IonButton
-            size="small"
-            fill="outline"
-            onClick={onClearChat}
-            className="clear-chat-btn"
-            title="Clear chat"
-          >
-            <IonIcon icon={trashOutline} slot="icon-only" />
-          </IonButton>
+          <div className="chat-actions">
+            <button
+              className="action-btn"
+              onClick={() => {
+                const chatText = messages.map(msg => 
+                  `[${msg.timestamp}] ${msg.role.toUpperCase()}: ${msg.content}`
+                ).join('\n\n');
+                const blob = new Blob([chatText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `chat-${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              title="Download chat"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 10v2.667A1.334 1.334 0 0 1 12.667 14H3.333A1.333 1.333 0 0 1 2 12.667V10M4.667 6.667L8 10m0 0l3.333-3.333M8 10V2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Download</span>
+            </button>
+            <button
+              className="action-btn delete-btn"
+              onClick={onClearChat}
+              title="Clear chat"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Clear Chat</span>
+            </button>
+          </div>
         )}
-        <IonInput
-          value={input}
-          placeholder="Type your message here..."
-          onIonInput={(e) => setInput(e.detail.value || '')}
-          onKeyPress={handleKeyPress}
-          disabled={isLoading}
-          className="chat-input"
-        />
-        <IonButton
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading}
-          className="send-button"
-        >
-          {isLoading ? <IonSpinner name="crescent" /> : <IonIcon icon={sendOutline} />}
-        </IonButton>
+        <div className="input-wrapper">
+          <input
+            type="text"
+            value={input}
+            placeholder="Type your message here..."
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={isLoading}
+            className="chat-input"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="send-button"
+          >
+            {isLoading ? (
+              <div className="spinner small"></div>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.333 1.667L9.167 10.833M18.333 1.667l-5.833 16.666-3.333-7.5-7.5-3.333 16.666-5.833Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

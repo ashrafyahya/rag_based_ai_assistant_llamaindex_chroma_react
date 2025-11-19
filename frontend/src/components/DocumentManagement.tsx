@@ -2,20 +2,6 @@
  * Document Management Component
  * Handles document upload, listing, and deletion
  */
-import {
-  IonButton,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSpinner,
-  IonText,
-} from '@ionic/react';
-import {
-  cloudUploadOutline,
-  documentTextOutline,
-  trashOutline,
-} from 'ionicons/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import apiService from '../services/api';
 import { Document } from '../types';
@@ -30,6 +16,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -48,22 +35,32 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
     }
   };
 
-  const handleFiles = async (files: FileList) => {
-    if (!files || files.length === 0) return;
+  const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(Array.from(files));
+    }
+  };
 
-    console.log('Starting upload for', files.length, 'file(s)');
+  const handleUploadClick = async () => {
+    if (selectedFiles.length === 0) return;
+
+    console.log('Starting upload for', selectedFiles.length, 'file(s)');
     setUploading(true);
     
     try {
-      const uploadPromises = [];
-      for (let i = 0; i < files.length; i++) {
-        console.log('Uploading file:', files[i].name, 'Size:', files[i].size, 'bytes');
-        uploadPromises.push(apiService.uploadDocument(files[i]));
-      }
+      const uploadPromises = selectedFiles.map(file => {
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'bytes');
+        return apiService.uploadDocument(file);
+      });
       
       const results = await Promise.all(uploadPromises);
       console.log('Upload results:', results);
       
+      setSelectedFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       await loadDocuments();
       console.log('Documents reloaded successfully');
     } catch (error: any) {
@@ -72,16 +69,6 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
       alert(`Error uploading documents: ${errorMsg}\n\nPlease check the console for more details.`);
     } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      await handleFiles(files);
     }
   };
 
@@ -94,7 +81,6 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Only set to false if leaving the upload-area itself, not its children
     if (e.currentTarget === e.target) {
       setIsDragging(false);
     }
@@ -105,24 +91,25 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
     e.stopPropagation();
   };
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      await handleFiles(files);
+      setSelectedFiles(Array.from(files));
     }
   };
 
-  const handleUploadAreaClick = (e: React.MouseEvent) => {
-    // Prevent triggering if already uploading
-    if (uploading) {
-      e.preventDefault();
-      return;
+  const handleUploadAreaClick = () => {
+    if (!uploading) {
+      fileInputRef.current?.click();
     }
-    fileInputRef.current?.click();
+  };
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
   const handleDeleteDocument = async (docId: string) => {
@@ -161,7 +148,7 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
           type="file"
           multiple
           accept=".txt,.pdf,.docx,.md"
-          onChange={handleFileUpload}
+          onChange={handleFileSelection}
           style={{ display: 'none' }}
         />
         
@@ -175,39 +162,78 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
         >
           {uploading ? (
             <div className="upload-status">
-              <IonSpinner />
+              <div className="spinner"></div>
               <span>Uploading...</span>
             </div>
           ) : (
             <>
-              <IonIcon icon={cloudUploadOutline} className="upload-icon" />
+              <svg className="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <h3>Upload documents</h3>
-              <p>Drag and drop files here</p>
+              <p>Drag and drop files here or click to browse</p>
               <span className="file-types">Limit 200MB per file • TXT, PDF, DOCX, MD</span>
             </>
           )}
         </div>
 
-        <IonButton
-          expand="block"
+        {selectedFiles.length > 0 && (
+          <div className="selected-files">
+            <h4>Selected Files ({selectedFiles.length})</h4>
+            <div className="file-list">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="file-item">
+                  <div className="file-info">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9.333 1.333H4a1.333 1.333 0 0 0-1.333 1.334v10.666A1.333 1.333 0 0 0 4 14.667h8a1.333 1.333 0 0 0 1.333-1.334V5.333L9.333 1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9.333 1.333v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="file-name">{file.name}</span>
+                  </div>
+                  <div className="file-actions">
+                    <span className="file-size">{(file.size / 1024).toFixed(1)} KB</span>
+                    <button
+                      className="remove-file-btn"
+                      onClick={() => removeSelectedFile(index)}
+                      title="Remove file"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              className="upload-btn"
+              onClick={handleUploadClick}
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : `Upload ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}`}
+            </button>
+          </div>
+        )}
+
+        <button
+          className="browse-button"
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
-          className="browse-button"
         >
           Browse files
-        </IonButton>
+        </button>
 
         {documents.length > 0 && (
-          <IonButton
-            expand="block"
-            fill="outline"
+          <button
+            className="clear-button"
             onClick={handleClearAll}
             disabled={loading}
-            className="clear-button"
           >
-            <IonIcon icon={trashOutline} slot="start" />
-            Clear database
-          </IonButton>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Clear database</span>
+          </button>
         )}
       </div>
 
@@ -216,31 +242,35 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
         
         {loading ? (
           <div className="loading-container">
-            <IonSpinner />
+            <div className="spinner"></div>
           </div>
         ) : documents.length === 0 ? (
           <div className="empty-state">
-            <IonIcon icon={documentTextOutline} className="empty-icon" />
-            <IonText color="medium">
-              <p>No documents uploaded yet</p>
-            </IonText>
+            <p>No documents uploaded yet</p>
           </div>
         ) : (
-          <IonList className="documents-list">
+          <ul className="documents-list">
             {documents.map((doc) => (
-              <IonItem key={doc.ids[0]} className="document-item" lines="none">
-                <IonIcon icon={documentTextOutline} slot="start" className="doc-icon" />
-                <IonLabel className="doc-label">{doc.name}</IonLabel>
-                <IonButton
-                  fill="clear"
-                  onClick={() => handleDeleteDocument(doc.ids[0])}
+              <li key={doc.ids[0]} className="document-item">
+                <div className="doc-info">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.333 1.333H4a1.333 1.333 0 0 0-1.333 1.334v10.666A1.333 1.333 0 0 0 4 14.667h8a1.333 1.333 0 0 0 1.333-1.334V5.333L9.333 1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.333 1.333v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="doc-label">{doc.name}</span>
+                </div>
+                <button
                   className="delete-button"
+                  onClick={() => handleDeleteDocument(doc.ids[0])}
+                  title="Delete document"
                 >
-                  <IonIcon icon={trashOutline} />
-                </IonButton>
-              </IonItem>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </li>
             ))}
-          </IonList>
+          </ul>
         )}
       </div>
     </div>

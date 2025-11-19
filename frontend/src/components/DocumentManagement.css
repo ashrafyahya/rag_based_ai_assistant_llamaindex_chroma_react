@@ -38,9 +38,9 @@
 }
 
 .upload-icon {
-  font-size: 3rem;
   color: var(--ion-color-primary);
   margin-bottom: 12px;
+  display: block;
 }
 
 .upload-area h3 {
@@ -71,28 +71,65 @@
   color: var(--ion-color-primary);
 }
 
-.browse-button {
-  --background: var(--ion-color-primary);
-  --background-hover: var(--ion-color-primary-shade);
-  --border-radius: 8px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
+.browse-button,
+.upload-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--ion-color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
   font-weight: 600;
-  text-transform: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.browse-button:hover:not(:disabled),
+.upload-btn:hover:not(:disabled) {
+  background: var(--ion-color-primary-shade);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.browse-button:disabled,
+.upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .clear-button {
-  --border-color: var(--app-accent-red);
-  --color: var(--app-accent-red);
-  --border-radius: 8px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--app-accent-red);
+  border: 1.5px solid var(--app-accent-red);
+  border-radius: 8px;
   font-weight: 500;
-  text-transform: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.clear-button:hover {
-  --background: rgba(239, 68, 68, 0.1);
+.clear-button:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clear-button svg {
+  flex-shrink: 0;
 }
 
 .documents-section {
@@ -133,45 +170,146 @@
 }
 
 .documents-list {
-  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .document-item {
-  --background: var(--app-card-bg);
-  --color: var(--app-text-primary);
-  --border-radius: 8px;
-  --padding-start: 12px;
-  --padding-end: 8px;
-  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--app-card-bg);
   border: 1px solid var(--app-border-color);
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .document-item:hover {
-  --background: var(--app-input-bg);
+  background: var(--app-input-bg);
+  border-color: var(--ion-color-primary);
   transform: translateX(2px);
 }
 
-.doc-icon {
+.doc-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-info svg {
+  flex-shrink: 0;
   color: var(--ion-color-primary);
-  font-size: 1.25rem;
 }
 
 .doc-label {
   font-size: 0.875rem;
   color: var(--app-text-primary);
-  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .delete-button {
-  --color: var(--app-text-muted);
-  --padding-start: 8px;
-  --padding-end: 8px;
+  background: transparent;
+  border: none;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .delete-button:hover {
-  --color: var(--app-accent-red);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--app-accent-red);
+}
+
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  background: var(--app-input-bg);
+  border-color: var(--ion-color-primary);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-info svg {
+  flex-shrink: 0;
+  color: var(--ion-color-primary);
+}
+
+.file-name {
+  color: var(--app-text-primary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.file-size {
+  color: var(--app-text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.remove-file-btn {
+  background: transparent;
+  border: none;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.remove-file-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--app-accent-red);
 }
 
 /* Scrollbar for documents section */
