@@ -2,9 +2,10 @@
 Main Application Module
 Orchestrates RAG system and query processing
 """
-from typing import Optional
+import json
+from typing import AsyncIterator, Optional
 
-from src.rag.llm_query import process_query
+from src.rag.llm_query import process_query, process_query_stream
 from src.rag.rag_system import get_rag_system
 
 from src.rag import memory_manager
@@ -63,6 +64,52 @@ def query_documents(
     )
     
     return answer
+
+
+async def query_documents_stream(
+    query: str,
+    n_results: int = 3,
+    api_provider: str = "groq",
+    api_key_groq: Optional[str] = None,
+    api_key_openai: Optional[str] = None,
+    api_key_gemini: Optional[str] = None,
+    api_key_deepseek: Optional[str] = None
+) -> AsyncIterator[str]:
+    """
+    Query the document database and stream response using the selected LLM.
+    
+    Args:
+        query (str): The user's question
+        n_results (int): Number of similar documents to retrieve
+        api_provider (str): LLM provider to use (groq, openai, gemini, deepseek)
+        api_key_* (Optional[str]): API keys for respective providers
+        
+    Yields:
+        str: Streaming chunks of the generated response
+    """
+    results = rag_system.search_documents(query, n_results)
+    
+    # Check document distance scores (lower distance = more similar)
+    distances = results.get("distances", [[]])[0]
+    if distances:
+        best_distance = min(distances)
+        print(f"[DISTANCE SCORE] Best: {best_distance:.4f} (lower = more similar)")
+        print(f"[DISTANCE SCORE] All scores: {[f'{d:.4f}' for d in distances]}")
+    
+    # Format context from search results
+    context = rag_system.format_search_results(results, query)
+    
+    # Process query with LLM streaming
+    async for chunk in process_query_stream(
+        query,
+        context,
+        api_provider=api_provider,
+        api_key_groq=api_key_groq,
+        api_key_openai=api_key_openai,
+        api_key_gemini=api_key_gemini,
+        api_key_deepseek=api_key_deepseek
+    ):
+        yield chunk
 
 
 def upload_document(uploaded_file):

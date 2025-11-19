@@ -8,21 +8,16 @@ from typing import Dict, List, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 # Add backend/src to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from src.app import (
-    clear_all_documents,
-    clear_chat_memory,
-    delete_document,
-    get_uploaded_documents,
-    query_documents,
-    upload_document,
-)
 from src.api_keys import APIKeyManager
+from src.app import (clear_all_documents, clear_chat_memory, delete_document,
+                     get_uploaded_documents, query_documents,
+                     query_documents_stream, upload_document)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -175,6 +170,8 @@ async def query_endpoint(request: QueryRequest):
         QueryResponse with generated answer
     """
     try:
+        print(f"[BACKEND] Received query: {request.query}")
+        print(f"[BACKEND] API Provider: {request.api_provider}")
         response = query_documents(
             query=request.query,
             n_results=request.n_results,
@@ -184,8 +181,43 @@ async def query_endpoint(request: QueryRequest):
             api_key_gemini=request.api_key_gemini,
             api_key_deepseek=request.api_key_deepseek,
         )
+        print(f"[BACKEND] Response generated: {response[:100]}...")
         return QueryResponse(response=response, success=True)
     except Exception as e:
+        print(f"[BACKEND ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/query/stream")
+async def query_endpoint_stream(request: QueryRequest):
+    """
+    Query the RAG system with streaming response
+    
+    Args:
+        request: QueryRequest with query text and API configuration
+    
+    Returns:
+        StreamingResponse with generated answer chunks
+    """
+    try:
+        print(f"[BACKEND STREAM] Received query: {request.query}")
+        print(f"[BACKEND STREAM] API Provider: {request.api_provider}")
+        
+        async def generate():
+            async for chunk in query_documents_stream(
+                query=request.query,
+                n_results=request.n_results,
+                api_provider=request.api_provider,
+                api_key_groq=request.api_key_groq,
+                api_key_openai=request.api_key_openai,
+                api_key_gemini=request.api_key_gemini,
+                api_key_deepseek=request.api_key_deepseek,
+            ):
+                yield chunk
+        
+        return StreamingResponse(generate(), media_type="text/plain")
+    except Exception as e:
+        print(f"[BACKEND STREAM ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

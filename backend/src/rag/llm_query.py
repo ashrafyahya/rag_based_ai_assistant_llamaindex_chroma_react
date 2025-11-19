@@ -3,7 +3,7 @@ LLM Query Module
 Handles LLM provider selection and query processing
 """
 import time
-from typing import Optional
+from typing import AsyncIterator, Optional
 
 from llama_index.core.llms import MessageRole
 from llama_index.llms.groq import Groq as LlamaGroq
@@ -377,3 +377,89 @@ def process_query(
 
     else:
         return f"Error: Unknown API provider '{api_provider}'. Please select a valid provider."
+
+
+async def process_query_stream(
+    query: str,
+    context: str,
+    api_provider: str = "groq",
+    api_key_groq: Optional[str] = None,
+    api_key_openai: Optional[str] = None,
+    api_key_gemini: Optional[str] = None,
+    api_key_deepseek: Optional[str] = None
+) -> AsyncIterator[str]:
+    """
+    Process a user query with streaming response using the selected LLM provider.
+    
+    Args:
+        query (str): User's question
+        context (str): Retrieved document context
+        api_provider (str): LLM provider (groq, openai, gemini, deepseek)
+        api_key_* (Optional[str]): API keys for respective providers
+        
+    Yields:
+        str: Streaming chunks of the generated response
+    """
+    # Validate context availability
+    if context == "No relevant information found in the documents.":
+        yield "I don't have enough information to answer this question."
+        return
+
+    # Route to appropriate LLM provider
+    if api_provider == "groq":
+        api_key = APIKeyManager.get_groq_key(api_key_groq)
+        if not api_key:
+            yield f"Error: {api_provider.upper()} API key not configured. Please provide your API key in the API Settings."
+            return
+        
+        # For now, use non-streaming (streaming implementation can be added later)
+        result = query_with_groq(query, context, api_key)
+        # Simulate streaming by yielding word by word
+        words = result.split()
+        for i, word in enumerate(words):
+            if i < len(words) - 1:
+                yield word + " "
+            else:
+                yield word
+
+    elif api_provider == "openai":
+        api_key = APIKeyManager.get_openai_key(api_key_openai)
+        if not api_key:
+            yield f"Error: {api_provider.upper()} API key not configured. Please provide your API key in the API Settings."
+            return
+        result = query_with_openai(query, context, api_key)
+        words = result.split()
+        for i, word in enumerate(words):
+            if i < len(words) - 1:
+                yield word + " "
+            else:
+                yield word
+
+    elif api_provider == "gemini":
+        api_key = APIKeyManager.get_gemini_key(api_key_gemini)
+        if not api_key:
+            yield f"Error: {api_provider.upper()} API key not configured. Please provide your API key in the API Settings."
+            return
+        result = query_with_gemini(query, context, api_key)
+        words = result.split()
+        for i, word in enumerate(words):
+            if i < len(words) - 1:
+                yield word + " "
+            else:
+                yield word
+
+    elif api_provider == "deepseek":
+        api_key = APIKeyManager.get_deepseek_key(api_key_deepseek)
+        if not api_key:
+            yield f"Error: {api_provider.upper()} API key not configured. Please provide your API key in the API Settings."
+            return
+        result = query_with_deepseek(query, context, api_key)
+        words = result.split()
+        for i, word in enumerate(words):
+            if i < len(words) - 1:
+                yield word + " "
+            else:
+                yield word
+
+    else:
+        yield f"Error: Unknown API provider '{api_provider}'. Please select a valid provider."
