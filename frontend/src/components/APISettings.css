@@ -1,14 +1,39 @@
-/* API Settings Styles */
+/* API Settings Styles - Modern Dark Theme */
 .api-settings {
-  padding: 16px;
   max-width: 800px;
   margin: 0 auto;
+  padding: 24px;
+}
+
+.api-settings ion-card {
+  --background: var(--app-sidebar-bg);
+  --color: var(--app-text-primary);
+  border: 1px solid var(--app-border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.api-settings ion-card-title {
+  font-size: 1.5rem;
+  color: var(--app-text-primary);
+  font-weight: 700;
 }
 
 .settings-content {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.settings-content > ion-text {
+  color: var(--app-text-secondary);
+  line-height: 1.6;
 }
 
 .provider-selection {
@@ -18,7 +43,28 @@
 }
 
 .provider-selection ion-label {
+  color: var(--app-text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
   margin-bottom: 8px;
+}
+
+.provider-selection ion-segment {
+  --background: var(--app-card-bg);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.provider-selection ion-segment-button {
+  --color: var(--app-text-secondary);
+  --color-checked: var(--app-text-primary);
+  --background-checked: var(--ion-color-primary);
+  --indicator-color: transparent;
+  --border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: none;
+  min-height: 40px;
 }
 
 .api-keys-section {
@@ -31,17 +77,73 @@
   width: 100%;
 }
 
+.api-key-input ion-item {
+  --background: var(--app-card-bg);
+  --color: var(--app-text-primary);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: 1px solid var(--app-border-color);
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.api-key-input ion-item:focus-within {
+  border-color: var(--ion-color-primary);
+}
+
+.api-key-input ion-label {
+  color: var(--app-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
 .get-key-link {
   margin-left: 8px;
   color: var(--ion-color-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 .get-key-link:hover {
+  color: var(--ion-color-primary-tint);
   text-decoration: underline;
 }
 
+.api-key-input ion-input {
+  --color: var(--app-text-primary);
+  --placeholder-color: var(--app-text-muted);
+  font-size: 0.9rem;
+}
+
 .actions {
-  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.actions ion-button {
+  --background: var(--ion-color-primary);
+  --background-hover: var(--ion-color-primary-shade);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .api-settings {
+    padding: 16px;
+  }
+
+  .provider-selection ion-segment-button {
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
 }

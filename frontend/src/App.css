@@ -1,11 +1,39 @@
-/* Global App Styles */
+/* Global App Styles - Modern Dark Theme */
 :root {
-  --ion-color-primary: #3880ff;
-  --ion-color-primary-rgb: 56, 128, 255;
+  /* Primary Colors */
+  --ion-color-primary: #6366f1;
+  --ion-color-primary-rgb: 99, 102, 241;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #3171e0;
-  --ion-color-primary-tint: #4c8dff;
+  --ion-color-primary-shade: #4f46e5;
+  --ion-color-primary-tint: #818cf8;
+
+  /* Background Colors */
+  --app-bg-dark: #0f0f1e;
+  --app-bg-darker: #0a0a15;
+  --app-sidebar-bg: #1a1a2e;
+  --app-card-bg: #16213e;
+  --app-input-bg: #1e2a45;
+
+  /* Text Colors */
+  --app-text-primary: #e5e7eb;
+  --app-text-secondary: #9ca3af;
+  --app-text-muted: #6b7280;
+
+  /* Accent Colors */
+  --app-accent-red: #ef4444;
+  --app-accent-green: #10b981;
+  --app-accent-blue: #3b82f6;
+  --app-accent-purple: #8b5cf6;
+
+  /* Message Colors */
+  --app-user-msg-bg: #6366f1;
+  --app-assistant-msg-bg: #1e2a45;
+  --app-border-color: #2d3748;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -15,6 +43,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--app-bg-dark);
+  color: var(--app-text-primary);
 }
 
 code {
@@ -23,6 +53,16 @@ code {
 }
 
 ion-content {
-  --background: #f8f9fa;
+  --background: var(--app-bg-dark);
+}
+
+ion-toolbar {
+  --background: var(--app-sidebar-bg);
+  --color: var(--app-text-primary);
+}
+
+ion-card {
+  --background: var(--app-card-bg);
+  --color: var(--app-text-primary);
 }
 

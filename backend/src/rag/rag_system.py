@@ -123,7 +123,7 @@ class RAGSystem:
         Uses PyMuPDFReader for PDFs to preserve layout and table structure.
         
         Args:
-            uploaded_file: File object from Streamlit file uploader
+            uploaded_file: File object (supports both Streamlit and FastAPI file uploads)
             
         Returns:
             str: Success or error message
@@ -133,18 +133,36 @@ class RAGSystem:
             Supports .txt, .pdf, .docx, .md, .html with enhanced PDF processing.
         """
         try:
+            # Get filename - handle both Streamlit and FastAPI file objects
+            filename = getattr(uploaded_file, 'filename', None) or getattr(uploaded_file, 'name', 'unknown')
+            
             existing_docs = self.get_uploaded_documents()
             existing_names = [doc['name'] for doc in existing_docs]
-            if uploaded_file.name in existing_names:
-                return f"Document '{uploaded_file.name}' already exists. Upload cancelled."
+            if filename in existing_names:
+                return f"Document '{filename}' already exists. Upload cancelled."
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{uploaded_file.name}") as temp_file:
-                temp_file.write(uploaded_file.getvalue())
+            # Read file content - handle both Streamlit and FastAPI formats
+            if hasattr(uploaded_file, 'getvalue'):
+                # Streamlit UploadedFile
+                file_content = uploaded_file.getvalue()
+                file_size = len(file_content)
+                file_type = getattr(uploaded_file, 'type', 'application/octet-stream')
+            elif hasattr(uploaded_file, 'file'):
+                # FastAPI UploadFile
+                file_content = uploaded_file.file.read()
+                uploaded_file.file.seek(0)  # Reset file pointer
+                file_size = len(file_content)
+                file_type = uploaded_file.content_type or 'application/octet-stream'
+            else:
+                return "Unsupported file format"
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{filename}") as temp_file:
+                temp_file.write(file_content)
                 temp_file_path = temp_file.name
 
             # Use enhanced PDF reader if available
             file_extractor = {}
-            if PYMUPDF_AVAILABLE and uploaded_file.name.lower().endswith('.pdf'):
+            if PYMUPDF_AVAILABLE and filename.lower().endswith('.pdf'):
                 file_extractor['.pdf'] = PyMuPDFReader()
 
             documents = SimpleDirectoryReader(
@@ -153,11 +171,11 @@ class RAGSystem:
             ).load_data()
 
             for doc in documents:
-                doc_id = f"{uploaded_file.name}_{hash(doc.text)}"
+                doc_id = f"{filename}_{hash(doc.text)}"
                 metadata = {
-                    "source": uploaded_file.name,
-                    "file_type": uploaded_file.type,
-                    "file_size": len(uploaded_file.getvalue()),
+                    "source": filename,
+                    "file_type": file_type,
+                    "file_size": file_size,
                     "upload_type": "user_upload"
                 }
                 self.search.add_document(
@@ -167,9 +185,12 @@ class RAGSystem:
                 )
 
             os.unlink(temp_file_path)
-            return f"Successfully uploaded and indexed {uploaded_file.name}"
+            return f"Successfully uploaded and indexed {filename}"
 
         except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Error uploading document: {error_detail}")
             return f"Error uploading document: {str(e)}"
     
     def delete_document(self, doc_id: str) -> str:

@@ -1,29 +1,30 @@
 /**
  * Main Chat Page Component
- * Container for the entire RAG application
+ * Container for the entire RAG application with sidebar layout
  */
-import React, { useState, useEffect } from 'react';
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButton,
-  IonIcon,
-  IonButtons,
+    IonButton,
+    IonButtons,
+    IonContent,
+    IonHeader,
+    IonIcon,
+    IonPage,
+    IonTitle,
+    IonToolbar,
 } from '@ionic/react';
-import { settingsOutline } from 'ionicons/icons';
+import { downloadOutline, settingsOutline } from 'ionicons/icons';
+import React, { useEffect, useState } from 'react';
+import APISettings from '../components/APISettings';
 import ChatInterface from '../components/ChatInterface';
 import DocumentManagement from '../components/DocumentManagement';
-import APISettings from '../components/APISettings';
-import { Message, APIKeys, Provider } from '../types';
 import apiService from '../services/api';
+import { APIKeys, Message, Provider } from '../types';
+import './ChatPage.css';
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showAPISettings, setShowAPISettings] = useState(false);
-  const [showDocuments, setShowDocuments] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(true); // Show by default
   const [apiKeys, setApiKeys] = useState<APIKeys>({
     groq: '',
     openai: '',
@@ -108,39 +109,86 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  const handleDownloadChat = () => {
+    const chatText = messages.map(msg => 
+      `[${msg.timestamp}] ${msg.role.toUpperCase()}: ${msg.content}`
+    ).join('\n\n');
+    
+    const blob = new Blob([chatText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar color="primary">
-          <IonTitle>🤖 RAG AI Assistant</IonTitle>
+        <IonToolbar>
+          <IonTitle>
+            <div className="header-title">
+              <span className="logo-icon">🤖</span>
+              <span className="logo-text">RAG-based AI Assistant</span>
+            </div>
+          </IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={() => setShowDocuments(!showDocuments)}>
-              📁 Documents
+            <IonButton onClick={handleDownloadChat} disabled={messages.length === 0}>
+              <IonIcon icon={downloadOutline} slot="icon-only" />
             </IonButton>
             <IonButton onClick={() => setShowAPISettings(!showAPISettings)}>
-              <IonIcon icon={settingsOutline} />
+              <IonIcon icon={settingsOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent>
-        {showAPISettings ? (
-          <APISettings
-            apiKeys={apiKeys}
-            selectedProvider={selectedProvider}
-            onSave={handleSaveAPIKeys}
-            onClose={() => setShowAPISettings(false)}
-          />
-        ) : showDocuments ? (
-          <DocumentManagement onClose={() => setShowDocuments(false)} />
-        ) : (
-          <ChatInterface
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            onClearChat={handleClearChat}
-          />
-        )}
+        <div className="app-layout">
+          {/* Sidebar for Documents */}
+          <aside className={`sidebar ${showDocuments ? 'visible' : 'hidden'}`}>
+            <div className="sidebar-header">
+              <h2>Document Management</h2>
+              <button 
+                className="toggle-sidebar-btn"
+                onClick={() => setShowDocuments(!showDocuments)}
+                title="Toggle sidebar"
+              >
+                {showDocuments ? '◀' : '▶'}
+              </button>
+            </div>
+            <DocumentManagement onClose={() => setShowDocuments(false)} />
+          </aside>
+
+          {/* Main Chat Area */}
+          <main className="main-content">
+            {!showDocuments && (
+              <button 
+                className="open-sidebar-btn"
+                onClick={() => setShowDocuments(true)}
+                title="Open Document Management"
+              >
+                📁
+              </button>
+            )}
+            
+            {showAPISettings ? (
+              <APISettings
+                apiKeys={apiKeys}
+                selectedProvider={selectedProvider}
+                onSave={handleSaveAPIKeys}
+                onClose={() => setShowAPISettings(false)}
+              />
+            ) : (
+              <ChatInterface
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                onClearChat={handleClearChat}
+              />
+            )}
+          </main>
+        </div>
       </IonContent>
     </IonPage>
   );

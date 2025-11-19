@@ -2,16 +2,16 @@
  * Chat Interface Component
  * Displays messages and input for chatting with the RAG system
  */
-import React, { useState, useRef, useEffect } from 'react';
 import {
-  IonInput,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonIcon,
-  IonSpinner,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonIcon,
+    IonInput,
+    IonSpinner,
 } from '@ionic/react';
 import { sendOutline, trashOutline } from 'ionicons/icons';
+import React, { useEffect, useRef, useState } from 'react';
 import { Message } from '../types';
 import './ChatInterface.css';
 
@@ -60,25 +60,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="chat-interface">
-      <div className="chat-header">
-        <h2>Chat with the Assistant</h2>
-        <div className="chat-actions">
-          {messages.length > 0 && (
-            <>
-              <IonButton size="small" fill="outline" onClick={onClearChat}>
-                <IonIcon icon={trashOutline} slot="start" />
-                Clear Chat
-              </IonButton>
-            </>
-          )}
-        </div>
-      </div>
-
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
             <h3>Welcome to RAG AI Assistant! 👋</h3>
-            <p>Upload documents using the Documents button and start asking questions.</p>
+            <p>Upload documents using the sidebar and start asking questions about them.</p>
           </div>
         ) : (
           <>
@@ -99,6 +85,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         size="small"
                         fill="clear"
                         onClick={() => copyToClipboard(message.content)}
+                        title="Copy to clipboard"
                       >
                         📋
                       </IonButton>
@@ -113,6 +100,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       <div className="input-container">
+        {messages.length > 0 && (
+          <IonButton
+            size="small"
+            fill="outline"
+            onClick={onClearChat}
+            className="clear-chat-btn"
+            title="Clear chat"
+          >
+            <IonIcon icon={trashOutline} slot="icon-only" />
+          </IonButton>
+        )}
         <IonInput
           value={input}
           placeholder="Type your message here..."
@@ -124,7 +122,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <IonButton
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
-          color="primary"
+          className="send-button"
         >
           {isLoading ? <IonSpinner name="crescent" /> : <IonIcon icon={sendOutline} />}
         </IonButton>
