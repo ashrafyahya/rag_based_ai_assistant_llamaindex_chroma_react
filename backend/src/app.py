@@ -4,9 +4,10 @@ Orchestrates RAG system and query processing
 """
 from typing import Optional
 
-from src.rag import memory_manager
 from src.rag.llm_query import process_query
 from src.rag.rag_system import get_rag_system
+
+from src.rag import memory_manager
 
 # Initialize the global RAG system instance
 rag_system = get_rag_system()
@@ -43,11 +44,9 @@ def query_documents(
     # Check document distance scores (lower distance = more similar)
     distances = results.get("distances", [[]])[0]
     if distances:
-        print(f"Best distance score: {min(distances):.4f} (lower = more similar)")
-    
-    # Filter out results if distance is too high (less similar)
-    if not distances or min(distances) > 0.7:
-        return "I don't have enough information to answer this question."
+        best_distance = min(distances)
+        print(f"[DISTANCE SCORE] Best: {best_distance:.4f} (lower = more similar)")
+        print(f"[DISTANCE SCORE] All scores: {[f'{d:.4f}' for d in distances]}")
     
     # Format context from search results
     context = rag_system.format_search_results(results, query)

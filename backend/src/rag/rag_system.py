@@ -135,6 +135,7 @@ class RAGSystem:
         try:
             # Get filename - handle both Streamlit and FastAPI file objects
             filename = getattr(uploaded_file, 'filename', None) or getattr(uploaded_file, 'name', 'unknown')
+            print(f"\n[UPLOAD] Starting upload for file: {filename}")
             
             existing_docs = self.get_uploaded_documents()
             existing_names = [doc['name'] for doc in existing_docs]
@@ -156,10 +157,14 @@ class RAGSystem:
             else:
                 return "Unsupported file format"
 
+            print(f"[UPLOAD] File size: {file_size} bytes ({file_size / 1024:.2f} KB)")
+            print(f"[UPLOAD] File type: {file_type}")
+            
             with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{filename}") as temp_file:
                 temp_file.write(file_content)
                 temp_file_path = temp_file.name
 
+            print(f"[INDEXING] Starting to index file: {filename}")
             # Use enhanced PDF reader if available
             file_extractor = {}
             if PYMUPDF_AVAILABLE and filename.lower().endswith('.pdf'):
@@ -169,6 +174,11 @@ class RAGSystem:
                 input_files=[temp_file_path],
                 file_extractor=file_extractor if file_extractor else None
             ).load_data()
+
+            total_chars = sum(len(doc.text) for doc in documents)
+            print(f"[INDEXING] Extracted {len(documents)} document chunks")
+            print(f"[INDEXING] Total characters: {total_chars}")
+            print(f"[INDEXING] Estimated tokens: ~{total_chars // 4}")
 
             for doc in documents:
                 doc_id = f"{filename}_{hash(doc.text)}"
@@ -185,6 +195,7 @@ class RAGSystem:
                 )
 
             os.unlink(temp_file_path)
+            print(f"[INDEXING] ✓ Successfully indexed {filename} into vector store")
             return f"Successfully uploaded and indexed {filename}"
 
         except Exception as e:
@@ -204,7 +215,9 @@ class RAGSystem:
             str: Success or error message
         """
         try:
+            print(f"[DELETE] Removing document with ID: {doc_id}")
             result = self.search.delete_document(doc_id)
+            print(f"[DELETE] ✓ Document deleted from vector store")
             return result
         except Exception as e:
             return f"Error deleting document: {str(e)}"
@@ -249,10 +262,14 @@ class RAGSystem:
         try:
             all_docs = self.search.list_all_documents()
             if all_docs and 'ids' in all_docs and all_docs['ids']:
+                doc_count = len(all_docs['ids'])
+                print(f"[CLEAR DATABASE] Deleting {doc_count} documents from vector store")
                 for doc_id in all_docs['ids']:
                     self.search.delete_document(doc_id)
-                return f"Successfully cleared {len(all_docs['ids'])} documents from ChromaDB"
+                print(f"[CLEAR DATABASE] ✓ All {doc_count} documents removed from vector store")
+                return f"Successfully cleared {doc_count} documents from ChromaDB"
             else:
+                print("[CLEAR DATABASE] No documents found to clear")
                 return "No documents found to clear"
         except Exception as e:
             return f"Error clearing documents: {str(e)}"
