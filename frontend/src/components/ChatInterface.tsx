@@ -10,12 +10,14 @@ interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (query: string) => Promise<void>;
   onClearChat: () => void;
+  isStreaming?: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   onSendMessage,
   onClearChat,
+  isStreaming = false,
 }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, [messages]);
 
   const handleSend = async () => {
-    if (input.trim() && !isLoading) {
+    if (input.trim() && !isLoading && !isStreaming) {
       setIsLoading(true);
       try {
         await onSendMessage(input);
@@ -124,23 +126,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {message.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div className={`message-card ${message.role}`}>
-                  <div className="message-content">{message.content}</div>
+                  <div className="message-content">
+                    {message.content}
+                    {isStreaming && index === messages.length - 1 && message.role === 'assistant' && (
+                      <span className="typing-indicator">▋</span>
+                    )}
+                  </div>
                   <div className="message-footer">
                     <span className="message-time">{message.timestamp}</span>
-                    <button
-                      className="copy-button"
-                      onClick={() => copyToClipboard(message.content, index)}
-                      title="Copy to clipboard"
-                    >
-                      {copiedIndex === index ? (
-                        <span className="copied-text">Copied!</span>
-                      ) : (
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M3.333 10h-.666a1.333 1.333 0 0 1-1.334-1.333v-6a1.333 1.333 0 0 1 1.334-1.334h6A1.333 1.333 0 0 1 10 2.667v.666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
+                    {message.content && (
+                      <button
+                        className="copy-button"
+                        onClick={() => copyToClipboard(message.content, index)}
+                        title="Copy to clipboard"
+                      >
+                        {copiedIndex === index ? (
+                          <span className="copied-text">✓</span>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3.333 10h-.666a1.333 1.333 0 0 1-1.334-1.333v-6a1.333 1.333 0 0 1 1.334-1.334h6A1.333 1.333 0 0 1 10 2.667v.666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -158,13 +167,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             placeholder="Type your message here..."
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            disabled={isLoading}
+            disabled={isLoading || isStreaming}
             className="chat-input"
             rows={1}
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isStreaming}
             className="send-button"
           >
             {isLoading ? (

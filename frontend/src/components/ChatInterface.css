@@ -91,9 +91,9 @@
 }
 
 .message-card {
-  width: 450px;
-  min-width: 450px;
   max-width: 450px;
+  min-width: 200px;
+  width: fit-content;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   border: 1px solid var(--app-border-color);
@@ -101,9 +101,9 @@
 }
 
 .message-card.user {
-  width: 450px;
-  min-width: 450px;
   max-width: 450px;
+  min-width: 200px;
+  width: fit-content;
   background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
   color: white;
   border: none;
@@ -149,6 +149,9 @@
   padding: 6px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
@@ -175,8 +178,7 @@
 .chat-actions-buttons-fixed {
   position: fixed;
   right: 6%;
-  top: 15%;
-  transform: translateY(-50%);
+  top: 80px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -253,10 +255,26 @@
 }
 
 .copied-text {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--ion-color-primary);
-  font-weight: 500;
+  font-weight: 600;
   animation: fadeIn 0.2s ease;
+}
+
+.typing-indicator {
+  display: inline-block;
+  animation: blink 1s infinite;
+  color: var(--ion-color-primary);
+  margin-left: 4px;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 @keyframes fadeIn {
@@ -318,9 +336,14 @@
 @media (max-width: 768px) {
   .message-card,
   .message-card.user {
-    width: 350px;
-    min-width: 350px;
     max-width: 350px;
+    min-width: 200px;
+    width: fit-content;
+  }
+  
+  .chat-actions-buttons-fixed {
+    right: 4%;
+    top: 70px;
   }
 
   .messages-container {
@@ -340,9 +363,14 @@
 @media (max-width: 480px) {
   .message-card,
   .message-card.user {
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+    max-width: calc(100vw - 80px);
+    min-width: 200px;
+    width: fit-content;
+  }
+  
+  .chat-actions-buttons-fixed {
+    right: 8px;
+    top: 60px;
   }
 
   .message-icon {

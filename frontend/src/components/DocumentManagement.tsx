@@ -238,13 +238,15 @@ const DocumentManagement: React.FC<DocumentManagementProps> = ({ onClose }) => {
           </div>
         )}
 
-        <button
-          className="browse-button"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Browse files
-        </button>
+        {selectedFiles.length === 0 && (
+          <button
+            className="browse-button"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Browse files
+          </button>
+        )}
 
         {documents.length > 0 && (
           <button

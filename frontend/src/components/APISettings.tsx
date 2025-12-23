@@ -2,7 +2,7 @@
  * API Settings Component
  * Manages API key configuration for different LLM providers
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { APIKeys, Provider, PROVIDERS } from '../types';
 import './APISettings.css';
 
@@ -32,6 +32,17 @@ const APISettings: React.FC<APISettingsProps> = ({
     setLocalProvider(provider);
     setApiKey(apiKeys[provider] || '');
   };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   return (
     <div className="api-settings">

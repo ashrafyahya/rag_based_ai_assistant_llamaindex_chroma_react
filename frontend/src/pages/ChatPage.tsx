@@ -15,6 +15,7 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showAPISettings, setShowAPISettings] = useState(false);
   const [showDocuments, setShowDocuments] = useState(true);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [apiKeys, setApiKeys] = useState<APIKeys>({
     groq: '',
     openai: '',
@@ -76,6 +77,7 @@ const ChatPage: React.FC = () => {
       console.log('[FRONTEND] Sending query:', query);
       console.log('[FRONTEND] Using provider:', selectedProvider);
       
+      setIsStreaming(true);
       await apiService.queryRAGStream(
         {
           query,
@@ -102,15 +104,24 @@ const ChatPage: React.FC = () => {
         }
       );
       
+      setIsStreaming(false);
       console.log('[FRONTEND] Stream completed');
     } catch (error: any) {
+      setIsStreaming(false);
       console.error('[FRONTEND ERROR]', error);
       const errorMessage: Message = {
         role: 'assistant',
         content: `Error: ${error.response?.data?.detail || error.message || 'Failed to get response'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-      setMessages([...messages, userMessage, errorMessage]);
+      // Use functional update to ensure we have the latest state
+      setMessages(prevMessages => {
+        // Remove the placeholder assistant message if it exists
+        const filtered = prevMessages.filter((msg, idx) => 
+          !(idx === prevMessages.length - 1 && msg.role === 'assistant' && msg.content === '')
+        );
+        return [...filtered, errorMessage];
+      });
     }
   };
 
@@ -202,7 +213,16 @@ const ChatPage: React.FC = () => {
           )}
           
           {showAPISettings && (
-            <div className="modal-overlay" onClick={() => setShowAPISettings(false)}>
+            <div 
+              className="modal-overlay" 
+              onClick={() => setShowAPISettings(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setShowAPISettings(false);
+                }
+              }}
+              tabIndex={-1}
+            >
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <APISettings
                   apiKeys={apiKeys}
@@ -219,6 +239,7 @@ const ChatPage: React.FC = () => {
               messages={messages}
               onSendMessage={handleSendMessage}
               onClearChat={handleClearChat}
+              isStreaming={isStreaming}
             />
           )}
         </main>
