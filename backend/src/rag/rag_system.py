@@ -2,6 +2,7 @@
 RAG System Module
 Orchestrates RAG operations: document loading, querying, and management
 """
+import hashlib
 import os
 import tempfile
 from pathlib import Path
@@ -19,6 +20,7 @@ except ImportError:
 
 from chroma_search import ChromaEmbeddingSearch
 from chroma_setup import setup_chroma
+from src.rag.chunking_strategy import create_chunking_strategy
 
 
 class RAGSystem:
@@ -37,6 +39,12 @@ class RAGSystem:
         print(f"ChromaDB initialized with collection: {self.collection.name}\n")
         
         self.search = ChromaEmbeddingSearch()
+        
+        # Initialize chunking strategy
+        self.chunking_strategy = create_chunking_strategy()
+        print(f"Chunking strategy initialized: {self.chunking_strategy.config.strategy} "
+              f"(chunk_size={self.chunking_strategy.config.chunk_size}, "
+              f"overlap={self.chunking_strategy.config.chunk_overlap})\n")
     
     def load_documents(self):
         """
@@ -64,13 +72,36 @@ class RAGSystem:
         # Prevent duplicate document insertion
         existing_docs = self.search.collection.get(include=["documents"])["documents"]
         if not existing_docs:
-            for doc in documents:
-                self.search.add_document(
-                    text=doc.text,
-                    doc_id=doc.doc_id,
-                    metadata={"source": doc.metadata.get("file_path", "")}
+            # Apply chunking strategy to documents
+            chunked_documents = self._apply_chunking(documents)
+            
+            # Batch add documents to ChromaDB
+            if chunked_documents:
+                ids = []
+                texts = []
+                metadatas = []
+                
+                for doc in chunked_documents:
+                    # Generate deterministic doc_id using SHA256
+                    doc_id = self._generate_doc_id(
+                        doc.metadata.get("source", ""),
+                        doc.text,
+                        doc.metadata.get("chunk_index", 0)
+                    )
+                    
+                    ids.append(doc_id)
+                    texts.append(doc.text)
+                    metadatas.append(doc.metadata)
+                
+                # Batch add to ChromaDB
+                self.search.collection.add(
+                    ids=ids,
+                    documents=texts,
+                    metadatas=metadatas
                 )
-            print("Documents added to ChromaDB\n")
+                print(f"Documents added to ChromaDB ({len(chunked_documents)} chunks from {len(documents)} documents)\n")
+            else:
+                print("No documents to add after chunking\n")
         else:
             print("Documents already exist in ChromaDB. Skipping insertion.\n")
     
@@ -171,25 +202,49 @@ class RAGSystem:
                 file_extractor=file_extractor if file_extractor else None
             ).load_data()
 
-            print(f"[INDEXING] Extracted {len(documents)} document chunks")
+            print(f"[INDEXING] Loaded {len(documents)} document(s) from file")
 
-            for doc in documents:
-                doc_id = f"{filename}_{hash(doc.text)}"
-                metadata = {
+            # Apply chunking strategy
+            chunked_documents = self._apply_chunking(documents)
+            print(f"[INDEXING] Created {len(chunked_documents)} chunks using {self.chunking_strategy.config.strategy} strategy")
+
+            # Prepare batch data for ChromaDB
+            ids = []
+            texts = []
+            metadatas = []
+
+            for doc in chunked_documents:
+                # Generate deterministic doc_id using SHA256
+                doc_id = self._generate_doc_id(
+                    filename,
+                    doc.text,
+                    doc.metadata.get("chunk_index", 0)
+                )
+                
+                # Enhance metadata with file information
+                enhanced_metadata = doc.metadata.copy()
+                enhanced_metadata.update({
                     "source": filename,
                     "file_type": file_type,
                     "file_size": file_size,
                     "upload_type": "user_upload"
-                }
-                self.search.add_document(
-                    text=doc.text,
-                    doc_id=doc_id,
-                    metadata=metadata
+                })
+                
+                ids.append(doc_id)
+                texts.append(doc.text)
+                metadatas.append(enhanced_metadata)
+
+            # Batch add to ChromaDB
+            if ids:
+                self.search.collection.add(
+                    ids=ids,
+                    documents=texts,
+                    metadatas=metadatas
                 )
 
             os.unlink(temp_file_path)
-            print(f"[INDEXING] ✓ Successfully indexed {filename} into vector store")
-            return f"Successfully uploaded and indexed {filename}"
+            print(f"[INDEXING] ✓ Successfully indexed {filename} into vector store ({len(chunked_documents)} chunks)")
+            return f"Successfully uploaded and indexed {filename} ({len(chunked_documents)} chunks)"
 
         except Exception as e:
             import traceback
@@ -266,6 +321,48 @@ class RAGSystem:
                 return "No documents found to clear"
         except Exception as e:
             return f"Error clearing documents: {str(e)}"
+    
+    def _apply_chunking(self, documents: List) -> List:
+        """
+        Apply chunking strategy to a list of documents.
+        
+        Args:
+            documents: List of Document objects from SimpleDirectoryReader
+            
+        Returns:
+            List of chunked Document objects
+        """
+        chunked_documents = []
+        
+        for doc in documents:
+            if not doc.text or len(doc.text.strip()) == 0:
+                continue
+            
+            # Apply chunking strategy
+            chunks = self.chunking_strategy.chunk_document(doc)
+            chunked_documents.extend(chunks)
+        
+        return chunked_documents
+    
+    def _generate_doc_id(self, filename: str, text: str, chunk_index: int) -> str:
+        """
+        Generate a deterministic document ID using SHA256 hash.
+        
+        Args:
+            filename: Original filename
+            text: Document text content
+            chunk_index: Index of the chunk
+            
+        Returns:
+            Deterministic document ID string
+        """
+        # Create hash of text content
+        text_hash = hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
+        
+        # Generate doc_id with chunk index
+        doc_id = f"{filename}_chunk_{chunk_index}_{text_hash}"
+        
+        return doc_id
 
 
 # Global RAG system instance
