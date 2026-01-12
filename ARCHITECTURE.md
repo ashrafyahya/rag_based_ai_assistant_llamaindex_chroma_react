@@ -1,9 +1,5 @@
 # RAG System Architecture
 
-## Overview
-
-The RAG system has been migrated from a monolithic Streamlit application to a modern, scalable architecture with separated frontend and backend.
-
 ## Architecture Diagram
 
 ```
@@ -138,9 +134,9 @@ User Query → Frontend Chat → API Service → Backend /api/chat/query
 ## Directory Structure
 
 ```
-RAG_llamaindex_chroma_groq/
-├── backend/                    # Backend application
-│   ├── src/                    # Source code
+rag_based_ai_assistant_llamaindex_chroma_react/
+├── backend/                   # Backend application
+│   ├── src/                   # Source code
 │   │   ├── rag/               # RAG system modules
 │   │   ├── app.py             # Application logic
 │   │   ├── api_keys.py        # API key management
@@ -176,25 +172,6 @@ RAG_llamaindex_chroma_groq/
 6. **Type Safety**: TypeScript in frontend reduces bugs
 7. **Maintainability**: Clear structure makes maintenance easier
 8. **Testing**: Can test frontend and backend independently
-
-## Migration Notes
-
-### Changes from Streamlit Version
-- ✅ Removed Streamlit dependency
-- ✅ Added FastAPI REST API
-- ✅ Created React Ionic frontend
-- ✅ Improved component structure
-- ✅ Better state management
-- ✅ Enhanced API documentation
-- ✅ Separated frontend/backend concerns
-
-### Preserved Functionality
-- ✅ Document upload and management
-- ✅ Chat with RAG system
-- ✅ Multiple LLM provider support
-- ✅ API key management
-- ✅ Conversation memory
-- ✅ Vector search with ChromaDB
 
 ## Future Enhancements
 
