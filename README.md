@@ -218,7 +218,7 @@ Docker support is available for the original Streamlit version. The new React/Fa
 
 ## License
 
-[Add your license information here]
+MIT License
 
 ## Support
 
