@@ -1,17 +1,18 @@
 services:
-  app:
+  backend:
     build: .
-    container_name: agentic-ai-container
+    container_name: rag-backend-container
     ports:
-      - "8504:8501"
+      - "8000:8000"
     volumes:
       - ./chroma_db:/app/chroma_db
       - ./data:/app/data
-      - agentic_ai_cache:/app/.streamlit_cache
     environment:
       - PYTHONPATH=/app
     restart: unless-stopped
 
 volumes:
-  agentic_ai_cache:
+  chroma_db:
+    driver: local
+  data:
     driver: local
