@@ -26,9 +26,6 @@ Thumbs.db
 # Documentation (optional - remove this line if you want docs in container)
 *.md
 
-# Local storage cache (will be created fresh in container)
-.streamlit_cache/
-
 # Vector store & uploaded data (exclude to force fresh init in image)
 chroma_db/
 data/

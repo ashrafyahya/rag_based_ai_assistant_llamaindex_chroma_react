@@ -54,7 +54,6 @@ The system implements a modular RAG architecture with separated frontend and bac
 │   ├── package.json                # Node dependencies
 │   └── README.md                   # Frontend documentation
 ├── src/                            # Original source (legacy)
-├── ui/                             # Original Streamlit UI (legacy)
 ├── chroma_db/                      # Vector database storage
 └── docs/                           # Documentation
 ```
@@ -200,7 +199,7 @@ npm run build
 
 ## Docker Support
 
-Docker support is available for the original Streamlit version. The new React/FastAPI stack can be containerized similarly.
+Docker support is available for containerizing the React/FastAPI stack. Use the provided Dockerfiles to build and run the application in containers.
 
 ## Security
 

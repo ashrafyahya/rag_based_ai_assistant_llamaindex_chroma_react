@@ -2,10 +2,11 @@
 set -e
 
 # Create necessary directories if they don't exist
-mkdir -p /app/data /app/chroma_db /app/.streamlit_cache
+mkdir -p /app/data /app/chroma_db
 
-echo "Starting Agentic AI Assistant..."
-echo "Application will be available at http://localhost:8501"
+echo "Starting RAG System Backend..."
+echo "API will be available at http://localhost:8000"
+echo "API Docs: http://localhost:8000/docs"
 
 # Execute the main command
 exec "$@"
